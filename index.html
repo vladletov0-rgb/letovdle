@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letovdle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121213;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 { font-size: 2.5rem; margin-bottom: 20px; letter-spacing: 2px; }
+        .grid { margin-bottom: 20px; }
+        .row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .tile {
+            width: 50px; height: 50px;
+            border: 2px solid #3a3a3c;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: bold; text-transform: uppercase;
+        }
+        .correct { background-color: #538d4e; border-color: #538d4e; }
+        .present { background-color: #b59f3b; border-color: #b59f3b; }
+        .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
+        
+        .controls { margin-top: 20px; }
+        input {
+            padding: 10px; font-size: 1.2rem; border: none; border-radius: 4px;
+            width: 150px; text-align: center; text-transform: uppercase;
+        }
+        button {
+            padding: 10px 20px; font-size: 1.2rem; margin-left: 10px;
+            background-color: #538d4e; color: white; border: none;
+            border-radius: 4px; cursor: pointer;
+        }
+        button:hover { background-color: #6aaa64; }
+    </style>
+</head>
+<body>
+
+    <h1>LETOVDLE</h1>
+    
+    <div id="game-board" class="grid">
+        <!-- Сюда будут добавляться попытки -->
+    </div>
+
+    <div class="controls">
+        <input type="text" id="input" maxlength="5" placeholder="5 БУКВ">
+        <button onclick="guess()">OK</button>
+    </div>
+
+    <script>
+        const WORDS = ["экран", "планы", "огонь", "стена", "весна", "город", "арбуз", "песня"];
+        const secret = WORDS[Math.floor(Math.random() * WORDS.length)];
+        console.log("Secret for debug:", secret); // Чтобы ты знал ответ при тестах
+
+        function guess() {
+            const input = document.getElementById("input");
+            const guess = input.value.toLowerCase();
+            
+            if (guess.length !== 5) {
+                alert("Нужно ровно 5 букв!");
+                return;
+            }
+
+            const board = document.getElementById("game-board");
+            const row = document.createElement("div");
+            row.className = "row";
+
+            // Логика для корректной подсветки (учитывает количество букв в слове)
+            let secretArr = secret.split('');
+            let guessArr = guess.split('');
+            let results = new Array(5).fill('absent');
+
+            // Первый проход: ищем зеленые (совпадения на своих местах)
+            for (let i = 0; i < 5; i++) {
+                if (guessArr[i] === secretArr[i]) {
+                    results[i] = 'correct';
+                    secretArr[i] = null; // Помечаем как использованную
+                    guessArr[i] = null;
+                }
+            }
+
+            // Второй проход: ищем желтые (есть в слове, но в другом месте)
+            for (let i = 0; i < 5; i++) {
+                if (guessArr[i] !== null) {
+                    let index = secretArr.indexOf(guessArr[i]);
+                    if (index !== -1) {
+                        results[i] = 'present';
+                        secretArr[index] = null;
+                    }
+                }
+            }
+
+            // Отрисовка плиток
+            for (let i = 0; i < 5; i++) {
+                const tile = document.createElement("div");
+                tile.className = `tile ${results[i]}`;
+                tile.innerText = guess[i];
+                row.appendChild(tile);
+            }
+
+            board.appendChild(row);
+            input.value = "";
+
+            if (guess === secret) {
+                setTimeout(() => { 
+                    alert("ПОБЕДА! Всё идет по плану."); 
+                    location.reload(); 
+                }, 100);
+            }
+        }
+        
+        // Позволяет нажимать Enter вместо кнопки OK
+        document.getElementById("input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                guess();
+            }
+        });
+    </script>
+</body>
+</html>
