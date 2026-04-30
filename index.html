@@ -5,52 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Letovdle</title>
     <style>
+        :root {
+            --color-correct: #538d4e;
+            --color-present: #b59f3b;
+            --color-absent: #3a3a3c;
+            --color-key: #818384;
+            --bg-color: #121213;
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #121213;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 20px;
             margin: 0;
+            padding: 20px;
+            min-height: 100vh;
             user-select: none;
         }
-        h1 { margin-bottom: 10px; letter-spacing: 2px; }
-        .grid { margin-bottom: 20px; }
-        .row { display: flex; gap: 5px; margin-bottom: 5px; }
-        .tile {
-            width: 50px; height: 50px;
-            border: 2px solid #3a3a3c;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: bold; text-transform: uppercase;
-        }
-        /* Цвета статусов */
-        .correct { background-color: #538d4e !important; border-color: #538d4e !important; }
-        .present { background-color: #b59f3b !important; border-color: #b59f3b !important; }
-        .absent { background-color: #3a3a3c !important; border-color: #3a3a3c !important; }
 
-        /* Стили клавиатуры */
-        .keyboard { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; padding: 10px; }
-        .kb-row { display: flex; justify-content: center; gap: 6px; }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            font-weight: 800;
+        }
+
+        /* Игровое поле */
+        .grid {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 30px;
+        }
+
+        .row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tile {
+            width: 52px;
+            height: 52px;
+            border: 2px solid #3a3a3c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+
+        /* Состояния плиток */
+        .correct { background-color: var(--color-correct); border-color: var(--color-correct); }
+        .present { background-color: var(--color-present); border-color: var(--color-present); }
+        .absent { background-color: var(--color-absent); border-color: var(--color-absent); }
+
+        /* Поле ввода и кнопка */
+        .controls {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            padding: 12px;
+            font-size: 1.2rem;
+            border: 2px solid #3a3a3c;
+            border-radius: 4px;
+            width: 140px;
+            text-align: center;
+            text-transform: uppercase;
+            background: #121213;
+            color: white;
+            outline: none;
+        }
+
+        input:focus { border-color: #818384; }
+
+        /* Клавиатура */
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .kb-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
         .key {
-            background-color: #818384;
+            background-color: var(--color-key);
             color: white;
             border: none;
             border-radius: 4px;
-            padding: 15px 10px;
-            min-width: 33px;
+            padding: 15px 5px;
+            min-width: 35px;
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
-            transition: background-color 0.2s;
+            font-size: 0.9rem;
+            flex: 1;
+            transition: transform 0.1s, background-color 0.2s;
         }
-        .key.wide { min-width: 65px; }
-        
-        .controls { margin: 20px 0; }
-        input {
-            padding: 10px; font-size: 1.2rem; border: none; border-radius: 4px;
-            width: 140px; text-align: center; text-transform: uppercase;
+
+        .key:active { transform: scale(0.95); }
+        .key.wide { flex: 1.5; background-color: #565758; }
+        .key.enter { background-color: var(--color-correct); }
+
+        @media (max-width: 480px) {
+            .tile { width: 45px; height: 45px; font-size: 1.5rem; }
+            .key { padding: 12px 2px; min-width: 25px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -61,8 +133,8 @@
     <div id="game-board" class="grid"></div>
 
     <div class="controls">
-        <input type="text" id="input" maxlength="5" placeholder="5 БУКВ">
-        <button class="key wide" style="background-color: #538d4e;" onclick="guess()">OK</button>
+        <input type="text" id="input" maxlength="5" placeholder="5 БУКВ" autocomplete="off">
+        <button class="key wide enter" onclick="guess()">OK</button>
     </div>
 
     <div class="keyboard" id="keyboard">
@@ -79,24 +151,28 @@
     </div>
 
     <script>
-        const WORDS = ["экран", "планы", "огонь", "стена", "весна", "город", "арбуз", "песня"];
-        const secret = WORDS[Math.floor(Math.random() * WORDS.length)];
-        const keyStates = {}; // Храним лучшие состояния кнопок
+        // Список слов (можно расширять)
+        const WORDS = ["экран", "планы", "огонь", "стена", "весна", "город", "арбуз", "песня", "панель", "вечность", "стекло", "память"];
+        // Фильтруем только слова из 5 букв для безопасности
+        const validWords = WORDS.filter(w => w.length === 5);
+        const secret = validWords[Math.floor(Math.random() * validWords.length)];
+        
+        const inputEl = document.getElementById("input");
 
-        function addLetter(l) { 
-            const input = document.getElementById("input");
-            if (input.value.length < 5) input.value += l; 
-        }
-        function delLetter() { 
-            const input = document.getElementById("input");
-            input.value = input.value.slice(0, -1); 
+        // Функции ввода
+        function addLetter(l) {
+            if (inputEl.value.length < 5) inputEl.value += l;
         }
 
+        function delLetter() {
+            inputEl.value = inputEl.value.slice(0, -1);
+        }
+
+        // Обновление цветов клавиатуры
         function updateKeyColor(letter, status) {
             const keys = document.querySelectorAll('.key');
             keys.forEach(key => {
                 if (key.innerText.toLowerCase() === letter) {
-                    // Приоритет цветов: green > yellow > gray
                     if (status === 'correct') {
                         key.className = 'key correct';
                     } else if (status === 'present' && !key.classList.contains('correct')) {
@@ -109,9 +185,11 @@
         }
 
         function guess() {
-            const input = document.getElementById("input");
-            const guess = input.value.toLowerCase();
-            if (guess.length !== 5) return alert("Нужно 5 букв!");
+            const guess = inputEl.value.toLowerCase();
+            if (guess.length !== 5) {
+                alert("Нужно ввести 5 букв!");
+                return;
+            }
 
             const board = document.getElementById("game-board");
             const row = document.createElement("div");
@@ -121,7 +199,7 @@
             let guessArr = guess.split('');
             let results = new Array(5).fill('absent');
 
-            // Зеленые
+            // 1 проход: ищем совпадения (зеленые)
             for (let i = 0; i < 5; i++) {
                 if (guessArr[i] === secretArr[i]) {
                     results[i] = 'correct';
@@ -130,7 +208,8 @@
                     guessArr[i] = null;
                 }
             }
-            // Желтые и серые
+
+            // 2 проход: ищем наличие (желтые) и отсутствие (серые)
             for (let i = 0; i < 5; i++) {
                 if (guessArr[i] !== null) {
                     let idx = secretArr.indexOf(guessArr[i]);
@@ -144,6 +223,7 @@
                 }
             }
 
+            // Отрисовка
             for (let i = 0; i < 5; i++) {
                 const tile = document.createElement("div");
                 tile.className = `tile ${results[i]}`;
@@ -151,11 +231,25 @@
                 row.appendChild(tile);
             }
             board.appendChild(row);
-            input.value = "";
-            if (guess === secret) setTimeout(() => alert("ПОБЕДА!"), 100);
+            inputEl.value = "";
+
+            if (guess === secret) {
+                setTimeout(() => {
+                    alert("ПОБЕДА! Всё идёт по плану.");
+                    location.reload();
+                }, 200);
+            }
         }
 
-        document.getElementById("input").addEventListener("keypress", (e) => { if(e.key === "Enter") guess(); });
+        // Слушатели реальной клавиатуры
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") guess();
+            if (e.key === "Backspace") delLetter();
+            // Поддержка ввода русских букв с клавиатуры
+            if (/^[а-яёА-ЯЁ]$/.test(e.key)) {
+                addLetter(e.key.toLowerCase());
+            }
+        });
     </script>
 </body>
 </html>
