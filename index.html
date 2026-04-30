@@ -6,17 +6,17 @@
     <title>Letovdle</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: #121213;
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            padding-top: 20px;
             margin: 0;
+            user-select: none;
         }
-        h1 { font-size: 2.5rem; margin-bottom: 20px; letter-spacing: 2px; }
+        h1 { margin-bottom: 10px; letter-spacing: 2px; }
         .grid { margin-bottom: 20px; }
         .row { display: flex; gap: 5px; margin-bottom: 5px; }
         .tile {
@@ -25,104 +25,137 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem; font-weight: bold; text-transform: uppercase;
         }
-        .correct { background-color: #538d4e; border-color: #538d4e; }
-        .present { background-color: #b59f3b; border-color: #b59f3b; }
-        .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
+        /* Цвета статусов */
+        .correct { background-color: #538d4e !important; border-color: #538d4e !important; }
+        .present { background-color: #b59f3b !important; border-color: #b59f3b !important; }
+        .absent { background-color: #3a3a3c !important; border-color: #3a3a3c !important; }
+
+        /* Стили клавиатуры */
+        .keyboard { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; padding: 10px; }
+        .kb-row { display: flex; justify-content: center; gap: 6px; }
+        .key {
+            background-color: #818384;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 15px 10px;
+            min-width: 33px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: background-color 0.2s;
+        }
+        .key.wide { min-width: 65px; }
         
-        .controls { margin-top: 20px; }
+        .controls { margin: 20px 0; }
         input {
             padding: 10px; font-size: 1.2rem; border: none; border-radius: 4px;
-            width: 150px; text-align: center; text-transform: uppercase;
+            width: 140px; text-align: center; text-transform: uppercase;
         }
-        button {
-            padding: 10px 20px; font-size: 1.2rem; margin-left: 10px;
-            background-color: #538d4e; color: white; border: none;
-            border-radius: 4px; cursor: pointer;
-        }
-        button:hover { background-color: #6aaa64; }
     </style>
 </head>
 <body>
 
     <h1>LETOVDLE</h1>
     
-    <div id="game-board" class="grid">
-        <!-- Сюда будут добавляться попытки -->
-    </div>
+    <div id="game-board" class="grid"></div>
 
     <div class="controls">
         <input type="text" id="input" maxlength="5" placeholder="5 БУКВ">
-        <button onclick="guess()">OK</button>
+        <button class="key wide" style="background-color: #538d4e;" onclick="guess()">OK</button>
+    </div>
+
+    <div class="keyboard" id="keyboard">
+        <div class="kb-row">
+            <button class="key" onclick="addLetter('й')">й</button><button class="key" onclick="addLetter('ц')">ц</button><button class="key" onclick="addLetter('у')">у</button><button class="key" onclick="addLetter('к')">к</button><button class="key" onclick="addLetter('е')">е</button><button class="key" onclick="addLetter('н')">н</button><button class="key" onclick="addLetter('г')">г</button><button class="key" onclick="addLetter('ш')">ш</button><button class="key" onclick="addLetter('щ')">щ</button><button class="key" onclick="addLetter('з')">з</button><button class="key" onclick="addLetter('х')">х</button><button class="key" onclick="addLetter('ъ')">ъ</button>
+        </div>
+        <div class="kb-row">
+            <button class="key" onclick="addLetter('ф')">ф</button><button class="key" onclick="addLetter('ы')">ы</button><button class="key" onclick="addLetter('в')">в</button><button class="key" onclick="addLetter('а')">а</button><button class="key" onclick="addLetter('п')">п</button><button class="key" onclick="addLetter('р')">р</button><button class="key" onclick="addLetter('о')">о</button><button class="key" onclick="addLetter('л')">л</button><button class="key" onclick="addLetter('д')">д</button><button class="key" onclick="addLetter('ж')">ж</button><button class="key" onclick="addLetter('э')">э</button>
+        </div>
+        <div class="kb-row">
+            <button class="key wide" onclick="delLetter()">DEL</button>
+            <button class="key" onclick="addLetter('я')">я</button><button class="key" onclick="addLetter('ч')">ч</button><button class="key" onclick="addLetter('с')">с</button><button class="key" onclick="addLetter('м')">м</button><button class="key" onclick="addLetter('и')">и</button><button class="key" onclick="addLetter('т')">т</button><button class="key" onclick="addLetter('ь')">ь</button><button class="key" onclick="addLetter('б')">б</button><button class="key" onclick="addLetter('ю')">ю</button>
+        </div>
     </div>
 
     <script>
         const WORDS = ["экран", "планы", "огонь", "стена", "весна", "город", "арбуз", "песня"];
         const secret = WORDS[Math.floor(Math.random() * WORDS.length)];
-        console.log("Secret for debug:", secret); // Чтобы ты знал ответ при тестах
+        const keyStates = {}; // Храним лучшие состояния кнопок
+
+        function addLetter(l) { 
+            const input = document.getElementById("input");
+            if (input.value.length < 5) input.value += l; 
+        }
+        function delLetter() { 
+            const input = document.getElementById("input");
+            input.value = input.value.slice(0, -1); 
+        }
+
+        function updateKeyColor(letter, status) {
+            const keys = document.querySelectorAll('.key');
+            keys.forEach(key => {
+                if (key.innerText.toLowerCase() === letter) {
+                    // Приоритет цветов: green > yellow > gray
+                    if (status === 'correct') {
+                        key.className = 'key correct';
+                    } else if (status === 'present' && !key.classList.contains('correct')) {
+                        key.className = 'key present';
+                    } else if (status === 'absent' && !key.classList.contains('correct') && !key.classList.contains('present')) {
+                        key.className = 'key absent';
+                    }
+                }
+            });
+        }
 
         function guess() {
             const input = document.getElementById("input");
             const guess = input.value.toLowerCase();
-            
-            if (guess.length !== 5) {
-                alert("Нужно ровно 5 букв!");
-                return;
-            }
+            if (guess.length !== 5) return alert("Нужно 5 букв!");
 
             const board = document.getElementById("game-board");
             const row = document.createElement("div");
             row.className = "row";
 
-            // Логика для корректной подсветки (учитывает количество букв в слове)
             let secretArr = secret.split('');
             let guessArr = guess.split('');
             let results = new Array(5).fill('absent');
 
-            // Первый проход: ищем зеленые (совпадения на своих местах)
+            // Зеленые
             for (let i = 0; i < 5; i++) {
                 if (guessArr[i] === secretArr[i]) {
                     results[i] = 'correct';
-                    secretArr[i] = null; // Помечаем как использованную
+                    updateKeyColor(guess[i], 'correct');
+                    secretArr[i] = null;
                     guessArr[i] = null;
                 }
             }
-
-            // Второй проход: ищем желтые (есть в слове, но в другом месте)
+            // Желтые и серые
             for (let i = 0; i < 5; i++) {
                 if (guessArr[i] !== null) {
-                    let index = secretArr.indexOf(guessArr[i]);
-                    if (index !== -1) {
+                    let idx = secretArr.indexOf(guessArr[i]);
+                    if (idx !== -1) {
                         results[i] = 'present';
-                        secretArr[index] = null;
+                        updateKeyColor(guess[i], 'present');
+                        secretArr[idx] = null;
+                    } else {
+                        updateKeyColor(guess[i], 'absent');
                     }
                 }
             }
 
-            // Отрисовка плиток
             for (let i = 0; i < 5; i++) {
                 const tile = document.createElement("div");
                 tile.className = `tile ${results[i]}`;
                 tile.innerText = guess[i];
                 row.appendChild(tile);
             }
-
             board.appendChild(row);
             input.value = "";
-
-            if (guess === secret) {
-                setTimeout(() => { 
-                    alert("ПОБЕДА! Всё идет по плану."); 
-                    location.reload(); 
-                }, 100);
-            }
+            if (guess === secret) setTimeout(() => alert("ПОБЕДА!"), 100);
         }
-        
-        // Позволяет нажимать Enter вместо кнопки OK
-        document.getElementById("input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                guess();
-            }
-        });
+
+        document.getElementById("input").addEventListener("keypress", (e) => { if(e.key === "Enter") guess(); });
     </script>
 </body>
 </html>
