@@ -1,0 +1,27 @@
+{
+  "name": "letovdle",
+  "version": "1.0.0",
+  "description": "Русский Wordle (Летовдле) для Discord-бота",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js",
+    "preview": "node src/preview.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vladletov0-rgb/letovdle.git"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.2.1",
+    "dejavu-fonts-ttf": "^2.37.3",
+    "discord.js": "^14.28.1",
+    "dotenv": "^18.0.10"
+  }
+}
