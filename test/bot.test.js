@@ -12,7 +12,7 @@ function fakeInteraction(kind, { customId, sub, value, user = { id: '42', userna
     calls,
     user,
     customId,
-    commandName: 'wordle',
+    commandName: 'letodle',
     replied: false,
     deferred: false,
     isChatInputCommand: () => kind === 'command',
@@ -43,28 +43,28 @@ test('полный цикл слова дня через взаимодейст�
   assert.equal(cmd.calls[0][0], 'reply');
   assert.ok(cmd.calls[0][1].files.length === 1);
 
-  const btn = fakeInteraction('button', { customId: 'wordle:guess:daily' });
+  const btn = fakeInteraction('button', { customId: 'letodle:guess:daily' });
   await handle(btn);
   assert.equal(btn.calls[0][0], 'showModal');
 
-  const bad = fakeInteraction('modal', { customId: 'wordle:modal:daily', value: 'ыыыыы' });
+  const bad = fakeInteraction('modal', { customId: 'letodle:modal:daily', value: 'ыыыыы' });
   await handle(bad);
   assert.match(bad.calls[0][1].embeds[0].data.description, /нет в словаре/);
   assert.equal(store.getGame('42', 'daily').guesses.length, 0);
 
-  const good = fakeInteraction('modal', { customId: 'wordle:modal:daily', value: answer.toUpperCase() });
+  const good = fakeInteraction('modal', { customId: 'letodle:modal:daily', value: answer.toUpperCase() });
   await handle(good);
   assert.equal(store.getGame('42', 'daily').status, 'won');
   assert.match(good.calls[0][1].embeds[0].data.description, /угадано за 1\/6/);
   assert.equal(store.getStats('42').daily.wins, 1);
   assert.equal(store.getStats('42').daily.streak, 1);
 
-  const share = fakeInteraction('button', { customId: 'wordle:share:daily' });
+  const share = fakeInteraction('button', { customId: 'letodle:share:daily' });
   await handle(share);
   assert.match(share.calls[0][1].content, /Летовдле #330\*\* 1\/6\n🟩🟩🟩🟩🟩/);
   assert.equal(share.calls[0][1].flags, undefined, 'результат публикуется для всех');
 
-  // повторный /wordle день в тот же день не даёт сыграть заново
+  // повторный /letodle день в тот же день не даёт сыграть заново
   const again = fakeInteraction('command', { sub: 'daily' });
   await handle(again);
   assert.equal(store.getGame('42', 'daily').status, 'won');
@@ -90,10 +90,10 @@ test('тренировка: новое слово после окончания'
   const game = store.getGame('42', 'practice');
   assert.equal(game.answer, words.ANSWERS[0]);
   for (const w of ['слово', 'весна', 'песок', 'песня', 'город', 'лодка']) {
-    if (w !== game.answer) await handle(fakeInteraction('modal', { customId: 'wordle:modal:practice', value: w }));
+    if (w !== game.answer) await handle(fakeInteraction('modal', { customId: 'letodle:modal:practice', value: w }));
   }
   assert.equal(store.getGame('42', 'practice').status, 'lost');
-  const btn = fakeInteraction('button', { customId: 'wordle:new:practice' });
+  const btn = fakeInteraction('button', { customId: 'letodle:new:practice' });
   await handle(btn);
   assert.equal(store.getGame('42', 'practice').status, 'playing');
   assert.equal(store.getStats('42').practice.played, 1);
@@ -102,6 +102,6 @@ test('тренировка: новое слово после окончания'
 test('слэш-команда собирается без ошибок', () => {
   const { commands } = require('../src/commands');
   const json = commands[0].toJSON();
-  assert.equal(json.name, 'wordle');
+  assert.equal(json.name, 'letodle');
   assert.deepEqual(json.options.map((o) => o.name), ['daily', 'practice', 'stats', 'rules']);
 });

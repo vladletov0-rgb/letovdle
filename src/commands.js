@@ -2,8 +2,8 @@
 
 const { SlashCommandBuilder, InteractionContextType, ApplicationIntegrationType } = require('discord.js');
 
-const wordle = new SlashCommandBuilder()
-  .setName('wordle')
+const letodle = new SlashCommandBuilder()
+  .setName('letodle')
   .setDescription('Russian Wordle: guess the 5-letter word in 6 tries')
   .setDescriptionLocalizations({ ru: 'Летовдле: угадай слово из 5 букв за 6 попыток' })
   .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
@@ -37,4 +37,4 @@ const wordle = new SlashCommandBuilder()
       .setDescriptionLocalizations({ ru: 'Как играть' }),
   );
 
-module.exports = { commands: [wordle] };
+module.exports = { commands: [letodle] };

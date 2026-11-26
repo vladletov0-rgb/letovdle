@@ -60,15 +60,15 @@ function buildView(game, notice = null) {
   const row = new ActionRowBuilder();
   if (game.status === 'playing') {
     row.addComponents(
-      new ButtonBuilder().setCustomId(`wordle:guess:${game.mode}`).setLabel('Ввести слово').setEmoji('⌨️').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`letodle:guess:${game.mode}`).setLabel('Ввести слово').setEmoji('⌨️').setStyle(ButtonStyle.Success),
     );
   } else {
     row.addComponents(
-      new ButtonBuilder().setCustomId(`wordle:share:${game.mode}`).setLabel('Поделиться').setEmoji('📤').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(`letodle:share:${game.mode}`).setLabel('Поделиться').setEmoji('📤').setStyle(ButtonStyle.Primary),
     );
     if (game.mode === 'practice') {
       row.addComponents(
-        new ButtonBuilder().setCustomId('wordle:new:practice').setLabel('Новое слово').setEmoji('🔄').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('letodle:new:practice').setLabel('Новое слово').setEmoji('🔄').setStyle(ButtonStyle.Secondary),
       );
     }
   }
@@ -85,7 +85,7 @@ function buildModal(mode) {
     .setMaxLength(words.WORD_LENGTH)
     .setRequired(true);
   return new ModalBuilder()
-    .setCustomId(`wordle:modal:${mode}`)
+    .setCustomId(`letodle:modal:${mode}`)
     .setTitle('Летовдле')
     .addComponents(new ActionRowBuilder().addComponents(input));
 }
@@ -104,9 +104,9 @@ function rulesEmbed() {
         '',
         'Можно вводить только существующие слова. Буквы **Е** и **Ё** считаются одной буквой.',
         '',
-        '`/wordle день` — слово дня, одно на всех, обновляется в полночь по Москве.',
-        '`/wordle тренировка` — случайные слова без ограничений.',
-        '`/wordle статистика` — твои результаты.',
+        '`/letodle день` — слово дня, одно на всех, обновляется в полночь по Москве.',
+        '`/letodle тренировка` — случайные слова без ограничений.',
+        '`/letodle статистика` — твои результаты.',
       ].join('\n'),
     );
 }
@@ -185,7 +185,7 @@ function createHandlers(store, { now = () => new Date(), random = Math.random } 
     if (action === 'new') return interaction.update(buildView(startPractice(userId)));
 
     if (!game) {
-      return interaction.reply({ content: 'Игра не найдена. Начни заново: `/wordle`.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: 'Игра не найдена. Начни заново: `/letodle`.', flags: MessageFlags.Ephemeral });
     }
 
     if (action === 'guess') {
@@ -210,7 +210,7 @@ function createHandlers(store, { now = () => new Date(), random = Math.random } 
       interaction.isFromMessage() ? interaction.update(payload) : interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
 
     let game = store.getGame(userId, mode);
-    if (!game) return respond({ content: 'Игра не найдена. Начни заново: `/wordle`.', embeds: [], components: [] });
+    if (!game) return respond({ content: 'Игра не найдена. Начни заново: `/letodle`.', embeds: [], components: [] });
 
     if (mode === 'daily' && game.date !== today()) {
       return respond(buildView(getOrStartDaily(userId), 'Наступил новый день — вот новое слово! Введи догадку ещё раз.'));
@@ -238,9 +238,9 @@ function createHandlers(store, { now = () => new Date(), random = Math.random } 
 
   async function handle(interaction) {
     try {
-      if (interaction.isChatInputCommand() && interaction.commandName === 'wordle') return await onCommand(interaction);
-      if (interaction.isButton() && interaction.customId.startsWith('wordle:')) return await onButton(interaction);
-      if (interaction.isModalSubmit() && interaction.customId.startsWith('wordle:')) return await onModal(interaction);
+      if (interaction.isChatInputCommand() && interaction.commandName === 'letodle') return await onCommand(interaction);
+      if (interaction.isButton() && interaction.customId.startsWith('letodle:')) return await onButton(interaction);
+      if (interaction.isModalSubmit() && interaction.customId.startsWith('letodle:')) return await onModal(interaction);
     } catch (err) {
       console.error('Ошибка при обработке взаимодействия:', err);
       const payload = { content: 'Что-то пошло не так 😕 Попробуй ещё раз.', flags: MessageFlags.Ephemeral };

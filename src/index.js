@@ -19,7 +19,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once(Events.ClientReady, (c) => {
   console.log(`Летовдле запущен как ${c.user.tag}. Слов для отгадывания: ${words.ANSWERS.length}, в словаре: ${words.VALID.size}.`);
-  c.user.setActivity('/wordle', { type: ActivityType.Playing });
+  c.user.setActivity('/letodle', { type: ActivityType.Playing });
 });
 
 client.on(Events.InteractionCreate, handle);
