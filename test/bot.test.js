@@ -6,7 +6,7 @@ const { createHandlers, prevDateKey } = require('../src/bot');
 const { Store } = require('../src/game/store');
 const words = require('../src/game/words');
 
-function fakeInteraction(kind, { customId, sub, value, user = { id: '42', username: 'tester' } } = {}) {
+function fakeInteraction(kind, { customId, sub, value, user = { id: '42', username: 'tester', displayName: 'Тестер', displayAvatarURL: () => null } } = {}) {
   const calls = [];
   const it = {
     calls,
@@ -23,7 +23,7 @@ function fakeInteraction(kind, { customId, sub, value, user = { id: '42', userna
     options: { getSubcommand: () => sub },
     fields: { getTextInputValue: () => value },
   };
-  for (const m of ['reply', 'update', 'showModal', 'followUp']) {
+  for (const m of ['reply', 'update', 'showModal', 'followUp', 'deferReply', 'editReply']) {
     it[m] = async (payload) => {
       calls.push([m, payload]);
     };
@@ -61,8 +61,12 @@ test('полный цикл слова дня через взаимодейст�
 
   const share = fakeInteraction('button', { customId: 'letodle:share:daily' });
   await handle(share);
-  assert.match(share.calls[0][1].content, /Летовдле #330\*\* 1\/6\n🟩🟩🟩🟩🟩/);
-  assert.equal(share.calls[0][1].flags, undefined, 'результат публикуется для всех');
+  assert.deepEqual(share.calls.map((c) => c[0]), ['deferReply', 'editReply']);
+  assert.equal(share.calls[0][1], undefined, 'результат публикуется для всех, не эфемерно');
+  const [file] = share.calls[1][1].files;
+  assert.equal(file.name, 'letovdle-result.png');
+  assert.equal(file.description, 'Тестер: Летовдле #330 1/6\n🟩🟩🟩🟩🟩');
+  assert.ok(file.attachment.subarray(1, 4).toString() === 'PNG');
 
   // повторный /letodle день в тот же день не даёт сыграть заново
   const again = fakeInteraction('command', { sub: 'daily' });

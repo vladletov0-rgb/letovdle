@@ -109,4 +109,4 @@ function renderBoard(game, { reveal = false } = {}) {
   return canvas.toBuffer('image/png');
 }
 
-module.exports = { renderBoard, COLORS, PRESENT };
+module.exports = { renderBoard, COLORS, FONT };

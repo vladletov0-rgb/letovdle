@@ -68,3 +68,16 @@ test('игра: победа, поражение и клавиатура', () =>
   for (let i = 0; i < 6; i++) engine.applyGuess(l, 'слово');
   assert.equal(l.status, 'lost');
 });
+
+test('карточка результата: эмодзи из ника убираются, время форматируется', () => {
+  const { cleanName, formatDuration, renderShareCard } = require('../src/game/card');
+  assert.equal(cleanName('laaaapshaaaaa 🏳️‍🌈'), 'laaaapshaaaaa');
+  assert.equal(cleanName('🔥🔥'), 'Игрок');
+  assert.equal(formatDuration(83000), '1:23');
+  assert.equal(formatDuration(3723000), '1:02:03');
+  assert.equal(formatDuration(0), null);
+  const g = engine.newGame({ answer: 'песня', mode: 'daily', date: '2026-11-26' });
+  engine.applyGuess(g, 'песня');
+  const png = renderShareCard({ game: g, name: 'Тест' });
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+});

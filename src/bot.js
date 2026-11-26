@@ -14,6 +14,7 @@ const {
 const words = require('./game/words');
 const engine = require('./game/engine');
 const { renderBoard } = require('./game/render');
+const { renderShareCard, fetchAvatar } = require('./game/card');
 
 const GREEN = 0x538d4e;
 const YELLOW = 0xb59f3b;
@@ -131,10 +132,11 @@ function statsEmbed(user, stats) {
     );
 }
 
-function shareText(game, user) {
+/** Текстовая версия результата — идёт в alt-текст картинки. */
+function shareText(game, name) {
   const score = game.status === 'won' ? game.guesses.length : 'X';
   const head = game.mode === 'daily' ? `Летовдле #${words.dayNumber(game.date)}` : 'Летовдле (тренировка)';
-  return `<@${user.id}> — **${head}** ${score}/${engine.MAX_ATTEMPTS}\n${engine.emojiGrid(game)}`;
+  return `${name}: ${head} ${score}/${engine.MAX_ATTEMPTS}\n${engine.emojiGrid(game)}`;
 }
 
 /**
@@ -198,9 +200,23 @@ function createHandlers(store, { now = () => new Date(), random = Math.random } 
 
     if (action === 'share') {
       if (game.status === 'playing') return interaction.reply({ content: 'Сначала доиграй!', flags: MessageFlags.Ephemeral });
-      return interaction.reply({ content: shareText(game, interaction.user), allowedMentions: { users: [] } });
+      return shareCard(interaction, game);
     }
     return undefined;
+  }
+
+  /** Публикует в чат картинку-карточку с результатом (без букв, чтобы не спойлерить). */
+  async function shareCard(interaction, game) {
+    await interaction.deferReply();
+    const { user, member } = interaction;
+    const hasMember = member && typeof member.displayAvatarURL === 'function';
+    const name = (hasMember && member.displayName) || user.displayName || user.username;
+    const avatarUrl = (hasMember ? member : user).displayAvatarURL({ extension: 'png', size: 256, forceStatic: true });
+    const avatar = await fetchAvatar(avatarUrl);
+    const png = renderShareCard({ game, name, avatar, streak: store.getStats(user.id).daily.streak });
+    return interaction.editReply({
+      files: [new AttachmentBuilder(png, { name: 'letovdle-result.png', description: shareText(game, name) })],
+    });
   }
 
   async function onModal(interaction) {
